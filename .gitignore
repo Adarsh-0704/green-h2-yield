@@ -1,0 +1,7 @@
+# The data pulled from NASA POWER
+data/
+*.csv
+# Miscellaneous cache
+.ipynb_checkpoints/
+.DS_Store
+__pycache__/
