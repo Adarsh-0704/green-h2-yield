@@ -120,8 +120,8 @@ def data_engineering(file, fit_spline=None):
 
     return df, spline
 
-def classification_engineering(file, scaler = None):
-    df, _ = data_engineering(file)
+def classification_engineering(file, scaler = None, spline = None):
+    df, spline = data_engineering(file, fit_spline = spline)
     # Safe Threshold is above 40% of Electrolyzer max energy which is 9.5 MWh
     # resulting in 40% of 9.5 = 3.8MWh
     df['Shutdown Threshold'] = (df['Energy To Grid(MWh)'] < 3.8).astype(int)
@@ -142,4 +142,4 @@ def classification_engineering(file, scaler = None):
         # When dataset is for testing purpose uses the scaled data from the training phase
         X_scaled = pd.DataFrame(scaler.transform(X), columns=features)
 
-    return X_scaled, y, scaler
+    return X_scaled, y, scaler, spline
