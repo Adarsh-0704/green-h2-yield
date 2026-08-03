@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import SplineTransformer
+from sklearn.preprocessing import SplineTransformer, StandardScaler
 
 def data_engineering(file, fit_spline=None):
     # 13 rows are skipped because the NASA POWER API's first 
@@ -119,3 +119,27 @@ def data_engineering(file, fit_spline=None):
     df[lags] = df[lags].bfill() # backfill the first row with a valid value
 
     return df, spline
+
+def classification_engineering(file, scaler = None):
+    df, _ = data_engineering(file)
+    # Safe Threshold is above 40% of Electrolyzer max energy which is 9.5 MWh
+    # resulting in 40% of 9.5 = 3.8MWh
+    df['Shutdown Threshold'] = (df['Energy To Grid(MWh)'] < 3.8).astype(int)
+
+    features = ['GHI(W/m2)', 'Windspeed(m/s)', 'Stored Energy(MWh)', 'Mon',
+                'Day', 'spline_hr_1','spline_hr_2', 'spline_hr_3',
+                'spline_hr_4', 'Windspeed_mean_3h','Windspeed_std_3h',
+                'GHI_mean_3h', 'Windspeed_lag_1hr','GHI_lag_1hr'
+                ]
+    X = df[features]
+    y = df['Shutdown Threshold']
+
+    if scaler is None:
+        # Runs when data is training set and not yet scaled
+        scaler = StandardScaler()
+        X_scaled = pd.DataFrame(scaler.fit_transform(X), columns=features)
+    else:
+        # When dataset is for testing purpose uses the scaled data from the training phase
+        X_scaled = pd.DataFrame(scaler.transform(X), columns=features)
+
+    return X_scaled, y, scaler
