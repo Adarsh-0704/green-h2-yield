@@ -5,16 +5,19 @@ from sklearn.preprocessing import SplineTransformer, StandardScaler
 def data_engineering(file, fit_spline=None):
     # 13 rows are skipped because the NASA POWER API's first 
     # 13 rows are metadata about the dataset therefore skipped
-    df = pd.read_csv(file, skiprows=13) 
-                                        
-    # Renamed to simpler names with their units
-    df = df.rename(columns={'ALLSKY_SFC_SW_DWN' : 'GHI(W/m2)' , 'WSC' : 'Windspeed(m/s)'}) 
-    
-    # Renaming to datetime object instead of using 3 diff rows
-    time_column = df[['YEAR' , 'MO' , 'DY' , 'HR']].rename(columns={'YEAR' : 'year' , 'MO' : 'month' , 'DY' : 'day' , 'HR' : 'hour'}) 
-    df['Time'] = pd.to_datetime(time_column)
-    df = df.set_index('Time')
-    df = df.drop(columns=['YEAR' , 'MO' , 'DY' , 'HR'])
+    if type(file) == str:
+        df = pd.read_csv(file, skiprows=13) 
+                                            
+        # Renamed to simpler names with their units
+        df = df.rename(columns={'ALLSKY_SFC_SW_DWN' : 'GHI(W/m2)' , 'WSC' : 'Windspeed(m/s)'}) 
+        
+        # Renaming to datetime object instead of using 3 diff rows
+        time_column = df[['YEAR' , 'MO' , 'DY' , 'HR']].rename(columns={'YEAR' : 'year' , 'MO' : 'month' , 'DY' : 'day' , 'HR' : 'hour'}) 
+        df['Time'] = pd.to_datetime(time_column)
+        df = df.set_index('Time')
+        df = df.drop(columns=['YEAR' , 'MO' , 'DY' , 'HR'])
+    else:
+        df = file.copy().set_index('Timestamp')
     
     # Hybrid Plant Power Calculation
     
