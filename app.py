@@ -10,11 +10,12 @@ st.set_page_config(page_title='Green Hydrogen Forecast', layout='wide',
                    )
 st.markdown('---')
 
-def load_data():
+def load_data(today_date):
     df = forecast()
     return df.reset_index()
 
-df = load_data()
+today_ist = pd.Timestamp.now(tz='Asia/Kolkata').date()
+df = load_data(today_date=today_ist)
 
 col_header, col_selector = st.columns([7, 3])
 with col_header:
@@ -88,7 +89,7 @@ fig.update_layout(height=450, hovermode='x unified',
                   margin=dict(l=30, r=30, t=40, b=30)
                   )
 
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, width='stretch')
 st.info("Chart Legend:\n\n"
         "Red Marker: Predicted Plant Shutdown\n\n"
         "Green Marker: Predicted Plant Operating Safely"
@@ -104,7 +105,7 @@ with st.expander("View Weather Telemetry (GHI and Windspeed)"):
         )
         fig_ghi.update_traces(line_color='orange')
         fig_ghi.update_layout(height=300, hovermode='x unified', margin=dict(l=20, r=20, t=30, b=20))
-        st.plotly_chart(fig_ghi, use_container_width=True)
+        st.plotly_chart(fig_ghi, width='stretch')
         
     with tab2:
         fig_wind = px.line(
@@ -114,4 +115,4 @@ with st.expander("View Weather Telemetry (GHI and Windspeed)"):
         )
         fig_wind.update_traces(line_color='lightgreen')
         fig_wind.update_layout(height=300, hovermode='x unified', margin=dict(l=20, r=20, t=30, b=20))
-        st.plotly_chart(fig_wind, use_container_width=True)
+        st.plotly_chart(fig_wind, width='stretch')

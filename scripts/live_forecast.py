@@ -8,22 +8,32 @@ hf_repo_id = "Adarsh-0704/green-h2-forecast"
 
 @st.cache_resource
 def load_hf_model(file):
-    model = hf_hub_download(repo_id=hf_repo_id, filename=file)
-    return joblib.load(model)
-
+    try:
+        model = hf_hub_download(repo_id=hf_repo_id, filename=file)
+        return joblib.load(model)
+    except Exception:
+        st.error(f"Error downloading or loading model {file} from Hugging face.")
+        st.stop()
+@st.cache_data(ttl=3600)
 def forecast(lat=24.11, lon=69.35):
+    today = pd.Timestamp.now(tz='Asia/Kolkata').date()
+    end_date = today + pd.Timedelta(days=6)
     # Open Meteo API endpoint
     url = 'https://api.open-meteo.com/v1/forecast'
     parameters = {
         'latitude' : lat,
         'longitude' : lon,
         'hourly' : 'windspeed_100m,shortwave_radiation',
-        'timezone' : 'auto',
-        'forecast_days' : 7
+        'timezone' : 'Asia/Kolkata',
+        'start_date' : today.strftime('%Y-%m-%d'),
+        'end_date' : end_date.strftime('%Y-%m-%d')
     }
-
-    response = requests.get(url, params=parameters, timeout=(5, 10))
-    response.raise_for_status()
+    try:
+        response = requests.get(url, params=parameters, timeout=(5, 10))
+        response.raise_for_status()
+    except requests.exceptions.RequestException:
+        st.error("Failed to retrieve weather data from Open Meteo. Please try again")
+        st.stop()
 
     data = response.json()['hourly']
 
@@ -61,8 +71,6 @@ def forecast(lat=24.11, lon=69.35):
     # Whenever Electrolyzer is predicted shutdown drop yield to 0 kg
     df_engineered['Predicted_Hydrogen_yield(kg)'] = np.where(df_engineered['Predicted_Shutdown'] == 1, 0, rf_yield)
 
-    # Extracting date to dynamically refresh every midnight
-    today = pd.Timestamp.now().date()
     df_engineered = df_engineered[df_engineered.index.date >= today].copy()
     # Labeling days with (0, 1, .. ,6)
     df_engineered['Relative Day'] = (df_engineered.index - pd.Timestamp(today)).days
