@@ -1,7 +1,15 @@
-import joblib, requests
+import joblib, requests, os
 import pandas as pd
 import numpy as np
 from scripts.pipeline import data_engineering, classification_engineering
+from huggingface_hub import hf_hub_download
+import streamlit as st
+hf_repo_id = "Adarsh-0704/green-h2-forecast"
+
+@st.cache_resource
+def load_hf_model(file):
+    model = hf_hub_download(repo_id=hf_repo_id, filename=file)
+    return joblib.load(model)
 
 def forecast(lat=24.11, lon=69.35):
     # Open Meteo API endpoint
@@ -14,7 +22,7 @@ def forecast(lat=24.11, lon=69.35):
         'forecast_days' : 7
     }
 
-    response = requests.get(url, params=parameters)
+    response = requests.get(url, params=parameters, timeout=(5, 10))
     response.raise_for_status()
 
     data = response.json()['hourly']
@@ -27,11 +35,11 @@ def forecast(lat=24.11, lon=69.35):
     df['Windspeed(m/s)'] = df['Windspeed(m/s)'] / 3.6
 
     # Loading our trained models
-    spline = joblib.load('../models/spline_classification.joblib')
-    scaler = joblib.load('../models/classi_scaler.joblib')
-    best_rf = joblib.load('../models/random_forest_regressor.joblib')
-    best_svm = joblib.load('../models/svm_shutdown_classification.joblib')
-    chosen_threshold = joblib.load('../models/svm_threshold.joblib')
+    spline = load_hf_model('spline_classification.joblib')
+    scaler = load_hf_model('classi_scaler.joblib')
+    best_rf = load_hf_model('random_forest_regressor.joblib')
+    best_svm = load_hf_model('svm_shutdown_classification.joblib')
+    chosen_threshold = load_hf_model('svm_threshold.joblib')
 
     # Part 1 for Random Forest
     df_engineered, _ = data_engineering(df.copy(), fit_spline=spline)

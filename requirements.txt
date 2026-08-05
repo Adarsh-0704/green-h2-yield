@@ -1,0 +1,10 @@
+numpy
+pandas
+matplotlib
+joblib
+scipy==1.17.1
+scikit-learn==1.8.0
+streamlit
+plotly
+starlette==0.38.2
+huggingface_hub

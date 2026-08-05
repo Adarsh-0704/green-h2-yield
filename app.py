@@ -1,9 +1,9 @@
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-import os
-os.chdir(os.path.join(os.path.dirname(__file__), 'scripts'))
-from scripts.live_forecast import forecast
+import os, sys
+sys.path.append(os.path.join(os.path.dirname(__file__), 'scripts'))
+from live_forecast import forecast # type: ignore
 
 st.set_page_config(page_title='Green Hydrogen Forecast', layout='wide',
                    initial_sidebar_state='collapsed'
